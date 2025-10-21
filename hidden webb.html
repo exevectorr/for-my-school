@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hidden Webb – Hyper Secure</title>
+  <style>
+    body{
+      margin:0;
+      background:#05080c;
+      color:#e6f0ff;
+      font-family: Consolas, monospace;
+      overflow-x:hidden;
+    }
+    .overlay{
+      position:fixed; inset:0; display:flex; justify-content:center; align-items:center;
+      background:rgba(0,0,0,0.95);
+      z-index:10;
+    }
+    .card{
+      background:#111822;
+      border:1px solid #00ffa9;
+      border-radius:10px;
+      padding:20px;
+      max-width:600px;
+      box-shadow:0 0 15px #00ffa9;
+    }
+    .card h1{
+      font-size:18px;
+      margin-bottom:10px;
+      color:#00ffa9;
+    }
+    .option{
+      background:#0c121b;
+      padding:10px;
+      border:1px solid #00d9ff;
+      border-radius:8px;
+      margin-bottom:10px;
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .option input{margin-top:4px;}
+    .btn{
+      background:#00ffa9;
+      border:0;
+      padding:10px 16px;
+      font-weight:bold;
+      border-radius:8px;
+      cursor:pointer;
+      margin-top:10px;
+    }
+    .btn:disabled{background:#444; cursor:not-allowed;}
+
+    /* Search UI */
+    #search{
+      display:none;
+      text-align:center;
+    }
+    .topbar{
+      position:fixed;
+      top:0; left:0; right:0;
+      background:#0f1622;
+      padding:12px;
+      box-shadow:0 0 10px #00ffa9;
+      z-index:5;
+    }
+    .searchbar input{
+      width:100%;
+      padding:14px;
+      border-radius:25px;
+      border:1px solid #00ffa9;
+      background:#05080c;
+      color:#e6f0ff;
+      font-size:15px;
+    }
+    .intro{
+      height:100vh;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+    }
+    .intro h1{font-size:42px; color:#00ffa9; margin:0;}
+    .intro h2{font-size:20px; color:#00d9ff; margin:10px 0 0;}
+    .content{
+      max-width:800px;
+      margin:0 auto;
+      padding:20px;
+      line-height:1.6;
+    }
+    .section{
+      background:#0f1622;
+      padding:20px;
+      border-left:3px solid #00ffa9;
+      border-radius:10px;
+      margin-bottom:20px;
+    }
+    .section h2{color:#00ffa9; margin-top:0;}
+    .section p{color:#cde;}
+
+    /* Error Screen */
+    #errorScreen, #noResults, #hireScreen{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:#0a0a0a;
+      padding:40px;
+      font-family: Consolas, monospace;
+      overflow-y:auto;
+      z-index:20;
+    }
+    #errorScreen h1, #noResults h1, #hireScreen h1{
+      font-size:40px;
+      margin:0 0 20px;
+    }
+    #errorScreen h1{color:#ff0000;}
+    #noResults h1{color:#00ffa9;}
+    #hireScreen h1{color:#00ffa9;}
+    #errorScreen pre, #noResults pre, #hireScreen pre{
+      white-space:pre-wrap;
+      line-height:1.4;
+    }
+    #errorScreen pre{color:#ffcccc;}
+    #noResults pre, #hireScreen pre{color:#cde;}
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay">
+    <div class="card">
+      <h1>choose your hidden webb operator and search engine</h1>
+      <label class="option"><input type="checkbox" id="opt1"> hidden webb – uses .wbb for hidden searches<br><small>super secure and encrypts your info and location...</small></label>
+      <label class="option"><input type="checkbox" id="opt2"> nett webb – uses .nett for hidden searches<br><small>uses the black net engine...</small></label>
+      <label class="option"><input type="checkbox" id="opt3"> LMP – uses .lmp for hidden searches<br><small>uses the sequence LMP...</small></label>
+      <label class="option"><input type="checkbox" id="opt4"> low flow – uses .ll for hidden searches<br><small>does not block anything...</small></label>
+      <button class="btn" id="confirm" disabled>Bekräfta</button>
+    </div>
+  </div>
+
+  <div id="search">
+    <div class="topbar">
+      <div class="searchbar">
+        <input type="text" id="q" placeholder="Encrypted search query…">
+      </div>
+    </div>
+
+    <div class="intro">
+      <h1>HIDDEN WEBB</h1>
+      <h2>The Hidden Webb Project</h2>
+    </div>
+
+    <div class="content">
+      <div class="section">
+        <h2>🔒 Ultimate Encryption</h2>
+        <p>Hidden Webb uses multiple layers of encryption. Your traffic passes through multiple gateway nodes, and each step is encrypted with AES-512 and dynamic hash keys. This ensures that no one can track or intercept your searches.
+         note: all of this depends on what operater you choose</p>
+      </div>
+      <div class="section">
+        <h2>🛡️ Security Status</h2>
+        <p>The security level is always MAX. Node integrity: 100%. The intrusion detection system continuously analyzes incoming traffic and stops attacks in real time.</p>
+      </div>
+      <div class="section">
+        <h2>🔑 Encrypted Index</h2>
+        <p>Each search generates a unique fingerprint and a random hash ID. The results are delivered through mirrored nodes and cloaked meta-links for maximum anonymity.</p>
+      </div>
+      <div class="section">
+        <h2>🌐 Why Hidden Webb?</h2>
+        <p>While other engines block, filter, or censor information, Hidden Webb shows everything. The information is reformatted into .wbb format, which makes the content secure but still accessible.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error screen -->
+  <div id="errorScreen">
+    <h1>ERROR: 001</h1>
+    <pre id="errorMsg"></pre>
+  </div>
+
+  <!-- No results screen -->
+  <div id="noResults">
+    <h1>No Results Found</h1>
+    <pre>
+No results found, make sure that your operator's servers are open 
+and not having a downtime or check your search query for mistakes.
+
+Possible causes:
+- The operator's encrypted nodes are under maintenance.
+- Your query syntax is not valid in the Hidden Webb ecosystem.
+- Temporary outage or misconfigured gateway paths.
+
+What to try:
+- Re-enter your query with verified spelling.
+- Switch to another operator if available.
+- Wait for nodes to re-synchronize and try again.
+
+System Status: ONLINE / PARTIAL AVAILABILITY
+Query Fingerprint: [hash-sequence-generated]
+    </pre>
+  </div>
+
+  <!-- Hire result screen -->
+  <div id="hireScreen">
+    <h1>Hire a hacker</h1>
+    <pre>
+Info:
+service is still avalible, all hackers are avalible.
+If you are interested, please contact the host at:
+hidden.b.web@gmail.com
+
+After you mail, you will receive a crypto address 
+for the bitcoin transaction.
+
+Prices:
+easy takedown (this means not done correctly and easy to trace and will be blamed on you): 0,00045 bitcoin
+normal takedown (will be done correctly and relative untracible, if caught you will dont get blamed): 0,0014 bitcoin
+prof takedown (will be done extreamly carefull and go all in on the target and you wont get blamed if caught): 0,0027 bitcoin
+
+packs
+DoS pack: hacker will DDoS and DoS the victims router and all the devices on the network and this will be done as normal takedown
+price for DoS pack: 0,0036 bitcoin
+
+Biggest pack: hacker will leak all victims info and every bit of their info and will also trade this info and then end it by DDoS'ing the targets router
+price for Biggest pack: 0,0091 bitcoin
+    </pre>
+  </div>
+
+  <script>
+    const opts = [document.getElementById('opt1'),document.getElementById('opt2'),document.getElementById('opt3'),document.getElementById('opt4')];
+    const confirmBtn = document.getElementById('confirm');
+    const q = document.getElementById('q');
+    const errorScreen = document.getElementById('errorScreen');
+    const errorMsg = document.getElementById('errorMsg');
+    const noResults = document.getElementById('noResults');
+    const hireScreen = document.getElementById('hireScreen');
+    let chosen = null;
+
+    const suffixes = {1: ".wbb", 2: ".nett", 3: ".lmp", 4: ".ll"};
+    const names = {1: "hidden webb", 2: "nett webb", 3: "LMP", 4: "low flow"};
+
+    opts.forEach((opt,i)=>{
+      opt.addEventListener('change',()=>{
+        if(opt.checked){opts.forEach(o=>{if(o!==opt)o.checked=false;}); chosen=i+1;}
+        confirmBtn.disabled = !opts.some(o=>o.checked);
+      });
+    });
+
+    confirmBtn.addEventListener('click',()=>{
+      document.getElementById('overlay').style.display='none';
+      document.getElementById('search').style.display='block';
+    });
+
+    q.addEventListener('keydown', e=>{
+      if(e.key==="Enter"){
+        let val = q.value.trim();
+        let required = suffixes[chosen];
+
+// Special case: hire string som beror på operator
+const hireBase = "hw//hire-h/fgj5893eir7r737489e7eeuhwfht58h3duh387";
+const hireString = hireBase + suffixes[chosen];  // t.ex. .wbb, .nett, .lmp, .ll
+
+if(val === hireString){
+  hireScreen.style.display = "block";
+  return;
+}
+        if(!val.endsWith(required)){
+          // Show error screen
+          errorMsg.textContent = 
+`System Validation Failure
+----------------------------
+Operator Selected: ${names[chosen]}
+Required Query Suffix: ${required}
+Your Input: "${val}"
+
+Cause:
+The input does not comply with the enforced security protocol for this operator.
+
+Resolution:
+Re-enter your query with the correct extension (${required}).
+
+System Note:
+Hidden Webb security policies are strict. Any mismatch results in full stop.`;
+          errorScreen.style.display = "block";
+        } else {
+          // Show no results screen
+          noResults.style.display = "block";
+        }
+      }
+    });
+  </script>
+</body>
+</html>
