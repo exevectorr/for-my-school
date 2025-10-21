@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Soccer Game - Realistic AI</title>
+  <style>
+    html, body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: #007b33;
+      color: white;
+    }
+    #ui {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #000a;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+#winner {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  font-weight: bold;
+  color: white;
+  background: #000c;
+  padding: 20px 40px;
+  border-radius: 20px;
+  z-index: 100;
+}
+#timer {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  z-index: 5;
+}
+    .btn {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 5;
+    }
+    canvas {
+      display: block;
+      background: #3fa34d;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">0 - 0</div>
+  <div id="timer">10:00</div>
+  <div id="winner" style="display:none;">Vinnare</div>
+
+  <div id="ui">
+    <h1>Välj lag</h1>
+    <button class="btn" style="background:red" onclick="selectTeam('red')">Rött Lag</button>
+    <button class="btn" style="background:blue" onclick="selectTeam('blue')">Blått Lag</button>
+    <div id="positionUI" style="display:none; margin-top: 20px;">
+      <h2>Välj position</h2>
+      <button class="btn" onclick="startGame('Goalkeeper')">Målvakt</button>
+      <button class="btn" onclick="startGame('Left Wing')">Left Wing</button>
+      <button class="btn" onclick="startGame('Back')">Back</button>
+      <button class="btn" onclick="startGame('Striker')">Striker</button>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <script>
+
+let gameOver = false;
+let totalTime = 10 * 60; // 10 minuter i sekunder
+let timerInterval;
+
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    let width, height;
+    let keys = {};
+
+    let player = { x: 0, y: 0, radius: 20, color: "", role: "", isPlayer: true };
+    let AIs = [];
+    let ball = { x: 0, y: 0, dx: 4, dy: 3, radius: 10 };
+    let goals = { red: 0, blue: 0 };
+    let teamColor = "red";
+    let opponentColor = "blue";
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      width = canvas.width;
+      height = canvas.height;
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    function selectTeam(color) {
+      teamColor = color;
+      opponentColor = color === "red" ? "blue" : "red";
+      player.color = color;
+      document.getElementById("positionUI").style.display = "block";
+    }
+
+    function startGame(role) {
+      player.role = role;
+      setPlayerStartPos(role);
+      setupTeams();
+      ball.x = width / 2;
+      ball.y = height / 2;
+      document.getElementById("ui").style.display = "none";
+      requestAnimationFrame(update);
+      startTimer();
+
+    }
+
+    function setPlayerStartPos(role) {
+      const y = height / 2;
+      switch (role) {
+        case "Goalkeeper": player.x = teamColor === "red" ? 50 : width - 50; player.y = y; break;
+        case "Left Wing": player.x = teamColor === "red" ? 150 : width - 150; player.y = y - 100; break;
+        case "Back": player.x = teamColor === "red" ? 150 : width - 150; player.y = y + 100; break;
+        case "Striker": player.x = teamColor === "red" ? width / 2 - 100 : width / 2 + 100; player.y = y; break;
+      }
+    }
+
+    function setupTeams() {
+      AIs = [];
+      const roles = ["Back", "Striker"];
+      for (let i = 0; i < 2; i++) {
+        AIs.push(createAI(teamColor, roles[i], true));
+        AIs.push(createAI(opponentColor, roles[i], false));
+      }
+      AIs.push(createAI(opponentColor, "Goalkeeper", false));
+    }
+
+    function createAI(color, role, isTeammate) {
+      const p = {
+        x: Math.random() * width,
+        y: Math.random() * height,
+        radius: 20,
+        color: color,
+        role: role,
+        isPlayer: false,
+        isTeammate: isTeammate
+      };
+      const centerY = height / 2;
+      if (role === "Goalkeeper") p.x = color === "red" ? 50 : width - 50, p.y = centerY;
+      if (role === "Back")        p.x = color === "red" ? 150 : width - 150, p.y = centerY + 100;
+      if (role === "Striker")     p.x = color === "red" ? width / 2 - 100 : width / 2 + 100, p.y = centerY;
+      return p;
+    }
+
+    document.addEventListener("keydown", e => keys[e.key] = true);
+    document.addEventListener("keyup", e => keys[e.key] = false);
+
+    function movePlayer(p) {
+      if (p.isPlayer) {
+        if (keys["w"]) p.y -= 5;
+        if (keys["s"]) p.y += 5;
+        if (keys["a"]) p.x -= 5;
+        if (keys["d"]) p.x += 5;
+      } else {
+        let dx = ball.x - p.x;
+        let dy = ball.y - p.y;
+        const dist = Math.hypot(dx, dy);
+        const zone = p.role === "Striker" ? 500 : 200;
+        if (dist < zone) {
+          p.x += dx / dist * 1.5;
+          p.y += dy / dist * 1.5;
+        }
+      }
+    }
+
+    function drawPlayer(p) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+    }
+
+    function drawBall() {
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "white";
+      ctx.fill();
+    }
+
+    function checkCollision(p, b) {
+      const dx = p.x - b.x;
+      const dy = p.y - b.y;
+      const dist = Math.hypot(dx, dy);
+      return dist < p.radius + b.radius;
+    }
+
+    function handleCollision(p) {
+      if (checkCollision(p, ball)) {
+        const angle = Math.atan2(ball.y - p.y, ball.x - p.x);
+        ball.dx = Math.cos(angle) * 5;
+        ball.dy = Math.sin(angle) * 5;
+      }
+    }
+
+    function drawGoals() {
+      const goalWidth = 10;
+      const goalHeight = 120;
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, height / 2 - goalHeight / 2, goalWidth, goalHeight); // left goal
+      ctx.fillRect(width - goalWidth, height / 2 - goalHeight / 2, goalWidth, goalHeight); // right goal
+    }
+
+    function checkGoal() {
+      const goalHeight = 120;
+      if (ball.x - ball.radius <= 0 && ball.y > height / 2 - goalHeight / 2 && ball.y < height / 2 + goalHeight / 2) {
+        goals.blue++;
+        resetGame();
+      } else if (ball.x + ball.radius >= width && ball.y > height / 2 - goalHeight / 2 && ball.y < height / 2 + goalHeight / 2) {
+        goals.red++;
+        resetGame();
+      }
+      document.getElementById("score").innerText = `${goals.red} - ${goals.blue}`;
+    }
+
+    function resetGame() {
+      ball.x = width / 2;
+      ball.y = height / 2;
+      ball.dx = (Math.random() < 0.5 ? -1 : 1) * 4;
+      ball.dy = (Math.random() < 0.5 ? -1 : 1) * 3;
+    }
+
+    function update() {
+if (gameOver) return;
+
+      ctx.clearRect(0, 0, width, height);
+      drawGoals();
+
+      movePlayer(player);
+      AIs.forEach(ai => movePlayer(ai));
+
+      ball.x += ball.dx;
+      ball.y += ball.dy;
+
+      // Studs mot kanter
+      if (ball.y <= 0 || ball.y >= height) ball.dy *= -1;
+      if (ball.x <= 0 || ball.x >= width) ball.dx *= -1;
+
+      // Kollisionskontroll
+      handleCollision(player);
+      AIs.forEach(ai => handleCollision(ai));
+
+      drawPlayer(player);
+      AIs.forEach(drawPlayer);
+      drawBall();
+      checkGoal();
+
+for (let i = 0; i < AIs.length; i++) {
+  for (let j = i + 1; j < AIs.length; j++) {
+    const ai1 = AIs[i];
+    const ai2 = AIs[j];
+    const dx = ai2.x - ai1.x;
+    const dy = ai2.y - ai1.y;
+    const dist = Math.hypot(dx, dy);
+    const minDist = ai1.radius + ai2.radius;
+
+    if (dist < minDist && dist !== 0) {
+      // Flytta isär dem
+      const overlap = (minDist - dist) / 2;
+      const offsetX = (dx / dist) * overlap;
+      const offsetY = (dy / dist) * overlap;
+
+      ai1.x -= offsetX;
+      ai1.y -= offsetY;
+      ai2.x += offsetX;
+      ai2.y += offsetY;
+    }
+  }
+}
+
+      requestAnimationFrame(update);
+    }
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    if (totalTime <= 0) {
+      clearInterval(timerInterval);
+      endGame();
+    } else {
+      totalTime--;
+      const minutes = String(Math.floor(totalTime / 60)).padStart(2, '0');
+      const seconds = String(totalTime % 60).padStart(2, '0');
+      document.getElementById("timer").innerText = `${minutes}:${seconds}`;
+    }
+  }, 1000);
+}
+
+function endGame() {
+  gameOver = true;
+  let winnerText;
+  if (goals.red > goals.blue) {
+    winnerText = "RÖDA LAGET VANN!";
+  } else if (goals.blue > goals.red) {
+    winnerText = "BLÅA LAGET VANN!";
+  } else {
+    winnerText = "OAVGJORT!";
+  }
+  const winnerDiv = document.getElementById("winner");
+  winnerDiv.innerText = winnerText;
+  winnerDiv.style.display = "block";
+}
+
+  </script>
+</body>
+</html>
